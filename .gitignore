@@ -4,3 +4,4 @@ node_modules/
 build/
 web-ext-artifacts/
 .DS_Store
+web-ext.config.ts
