@@ -1,5 +1,4 @@
-import { browser } from 'wxt/browser';
-import { hasHostPermission, hostPermissionPattern, portainerUrl } from '@/settings';
+import { hasHostPermission, portainerUrl, requestHostPermission } from '@/settings';
 import { createClient } from '@/portainer/client';
 import { isPortainerError } from '@/portainer/errors';
 import { groupStacksByEnvironment } from '@/portainer/group';
@@ -39,11 +38,7 @@ function showNoUrl(): void {
 function showNoPermission(baseUrl: string): void {
   const allow = button('Allow access', {
     variant: 'primary',
-    onClick: () => {
-      // Firefox only counts the prompt as user-initiated if nothing was awaited before it.
-      const request = browser.permissions.request({ origins: [hostPermissionPattern(baseUrl)] });
-      void request.catch(() => false).then(start);
-    },
+    onClick: () => void requestHostPermission(baseUrl).then(start),
   });
   show(
     h(
@@ -84,6 +79,7 @@ async function expire(baseUrl: string): Promise<void> {
 }
 
 async function loadStacks(view: ListView, baseUrl: string): Promise<void> {
+  if (list !== view) return;
   loadId += 1;
   const id = loadId;
   const current = () => id === loadId && list === view;

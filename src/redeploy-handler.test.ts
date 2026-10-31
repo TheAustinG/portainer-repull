@@ -73,7 +73,11 @@ describe('handleRedeploy', () => {
 
   it('clears the token when Portainer rejects it', async () => {
     vi.mocked(redeployStack).mockRejectedValue(new PortainerError('unauthorized', 'Unauthorized', 401));
-    await expect(handleRedeploy(request)).resolves.toMatchObject({ ok: false, kind: 'unauthorized' });
+    await expect(handleRedeploy(request)).resolves.toEqual({
+      ok: false,
+      kind: 'unauthorized',
+      message: 'Your Portainer session expired. Open the add-on and log in again.',
+    });
     expect(clearToken).toHaveBeenCalled();
   });
 
@@ -93,6 +97,20 @@ describe('handleRedeploy', () => {
       ok: false,
       kind: 'unknown',
       message: 'Kubernetes stacks cannot be redeployed',
+    });
+  });
+
+  it('still reports success when the notification fails', async () => {
+    notify.mockRejectedValue(new Error('notifications unavailable'));
+    await expect(handleRedeploy(request)).resolves.toEqual({ ok: true });
+  });
+
+  it('reports a failure when settings cannot be read', async () => {
+    vi.mocked(getToken).mockRejectedValue(new Error('storage unavailable'));
+    await expect(handleRedeploy(request)).resolves.toEqual({
+      ok: false,
+      kind: 'unknown',
+      message: 'storage unavailable',
     });
   });
 

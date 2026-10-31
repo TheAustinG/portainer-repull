@@ -32,10 +32,10 @@ export function errorBlock(error: unknown, baseUrl: string, onRetry: () => void)
         retry,
       );
     case 'timeout':
-      return block(['Portainer did not respond. Check that it is running.'], retry);
+      return block([error.message, 'Check that it is running.'], retry);
     case 'invalid-response':
       return block(
-        ['Portainer sent a response this add-on does not understand. Check the address in settings.'],
+        [error.message],
         button('Open settings', { variant: 'primary', onClick: openSettings }),
       );
     case 'http':

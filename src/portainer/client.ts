@@ -64,7 +64,7 @@ export function createClient(options: ClientOptions): PortainerClient {
       if (timedOut) {
         throw new PortainerError('timeout', 'Portainer did not respond in time.');
       }
-      throw new PortainerError('network', 'Could not reach Portainer.');
+      throw new PortainerError('network', "Can't reach Portainer.");
     } finally {
       clearTimeout(timer);
     }
@@ -176,6 +176,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function invalidResponse(): PortainerError {
   return new PortainerError(
     'invalid-response',
-    'The server answered, but not the way Portainer does. Check the Portainer address.',
+    'Portainer sent a response this add-on does not understand. Check the address in settings.',
   );
 }

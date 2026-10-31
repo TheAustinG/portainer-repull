@@ -65,7 +65,9 @@ export function createLoginView({ baseUrl, expired, onSuccess }: LoginViewOption
       return;
     } catch (error) {
       if (isPortainerError(error) && error.kind === 'unauthorized') {
-        status.textContent = 'Wrong username or password.';
+        status.textContent = /^invalid credentials/i.test(error.message)
+          ? 'Wrong username or password.'
+          : error.message;
         password.value = '';
         password.focus();
       } else {

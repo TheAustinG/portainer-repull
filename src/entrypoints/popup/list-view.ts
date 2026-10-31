@@ -38,6 +38,18 @@ function statusBadge(status: StackStatus): HTMLElement {
   return h('span', { class: `badge badge-${tone}` }, label);
 }
 
+function blockedReason(stack: Stack): string | null {
+  if (!isRedeployable(stack)) return 'Kubernetes stacks are not supported';
+  if (stack.Status === StackStatus.Deploying) return 'A deployment is already running';
+  return null;
+}
+
+function confirmText(stack: Stack): string {
+  return stack.Status === StackStatus.Inactive
+    ? `${stack.Name} is stopped. Redeploying starts it. Continue?`
+    : `Redeploy ${stack.Name}?`;
+}
+
 function isRedeployResponse(value: unknown): value is RedeployResponse {
   return typeof value === 'object' && value !== null && typeof (value as { ok?: unknown }).ok === 'boolean';
 }
@@ -93,7 +105,7 @@ export function createListView(options: ListViewOptions): ListView {
 
   function stackRow(stack: Stack): HTMLElement {
     const state = rows.get(stack.Id);
-    const redeployable = isRedeployable(stack);
+    const blocked = blockedReason(stack);
     const busy = state?.phase === 'running' || state?.phase === 'done';
     const confirming = state?.phase === 'confirm';
 
@@ -105,9 +117,9 @@ export function createListView(options: ListViewOptions): ListView {
       statusBadge(stack.Status),
       !confirming &&
         button('Redeploy', {
-          disabled: busy || !redeployable,
+          disabled: busy || blocked !== null,
           focusKey: `redeploy-${stack.Id}`,
-          ...(redeployable ? {} : { title: 'Kubernetes stacks are not supported' }),
+          ...(blocked ? { title: blocked } : {}),
           onClick: () => askConfirm(stack.Id),
         }),
     );
@@ -120,7 +132,7 @@ export function createListView(options: ListViewOptions): ListView {
         h(
           'div',
           { class: 'confirm', role: 'group', 'aria-label': `Confirm redeploy of ${stack.Name}` },
-          h('span', { class: 'confirm-text' }, `Redeploy ${stack.Name}?`),
+          h('span', { class: 'confirm-text' }, confirmText(stack)),
           h(
             'div',
             { class: 'actions' },
@@ -174,7 +186,10 @@ export function createListView(options: ListViewOptions): ListView {
     if (response.ok) {
       rows.set(stack.Id, { phase: 'done' });
       render();
-      refreshTimer = setTimeout(options.onRefresh, REFRESH_DELAY_MS);
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        if (!destroyed) options.onRefresh();
+      }, REFRESH_DELAY_MS);
     } else if (response.kind === 'unauthorized') {
       options.onExpired();
     } else {

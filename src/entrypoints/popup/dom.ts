@@ -1,4 +1,4 @@
-type Child = Node | string | null | false;
+type Child = Node | string | null | undefined | false;
 
 export function h<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -11,7 +11,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(
     else if (value !== false) node.setAttribute(name, value);
   }
   for (const child of children) {
-    if (child === null || child === false) continue;
+    if (child === null || child === undefined || child === false) continue;
     node.append(typeof child === 'string' ? document.createTextNode(child) : child);
   }
   return node;

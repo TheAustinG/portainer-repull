@@ -25,3 +25,12 @@ export function hostPermissionPattern(baseUrl: string): string {
 export function hasHostPermission(baseUrl: string): Promise<boolean> {
   return browser.permissions.contains({ origins: [hostPermissionPattern(baseUrl)] });
 }
+
+// Call before any await in a click or submit handler, or Firefox rejects it as not user-initiated.
+export function requestHostPermission(baseUrl: string): Promise<boolean> {
+  return browser.permissions.request({ origins: [hostPermissionPattern(baseUrl)] }).catch(() => false);
+}
+
+export async function removeHostPermission(baseUrl: string): Promise<void> {
+  await browser.permissions.remove({ origins: [hostPermissionPattern(baseUrl)] }).catch(() => false);
+}

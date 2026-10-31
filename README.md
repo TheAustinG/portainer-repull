@@ -12,7 +12,7 @@ Login uses your Portainer username and password. The add-on keeps only the sessi
 
 The add-on asks for access to your Portainer host when you save its address. Firefox ignores a port in a host permission, so the grant covers every port on that host. Nothing is sent anywhere else.
 
-Tested with Portainer CE 2.45. Requires Firefox 140 or newer.
+Built against the Portainer CE 2.45 API. Requires Firefox 140 or newer.
 
 ## Development
 

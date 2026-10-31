@@ -1,6 +1,12 @@
-import { browser } from 'wxt/browser';
 import { clearToken } from '@/portainer/session';
-import { hasHostPermission, hostPermissionPattern, normalizePortainerUrl, portainerUrl } from '@/settings';
+import {
+  hasHostPermission,
+  hostPermissionPattern,
+  normalizePortainerUrl,
+  portainerUrl,
+  removeHostPermission,
+  requestHostPermission,
+} from '@/settings';
 import './style.css';
 
 function must<T extends HTMLElement>(id: string): T {
@@ -27,10 +33,6 @@ function offerGrant(url: string | null): void {
   grant.hidden = url === null;
 }
 
-function requestAccess(url: string): Promise<boolean> {
-  return browser.permissions.request({ origins: [hostPermissionPattern(url)] }).catch(() => false);
-}
-
 function deniedMessage(url: string): string {
   return `Firefox access to ${new URL(url).hostname} was not granted. The add-on cannot reach Portainer without it.`;
 }
@@ -44,14 +46,16 @@ async function saveSettings(): Promise<void> {
     return;
   }
 
-  // Firefox only counts the prompt as user-initiated if nothing was awaited before it.
-  const granted = requestAccess(url);
+  const granted = requestHostPermission(url);
   save.disabled = true;
   setStatus('Saving...', 'neutral');
   try {
     const previous = await portainerUrl.getValue();
     await portainerUrl.setValue(url);
     if (previous !== url) await clearToken();
+    if (previous && hostPermissionPattern(previous) !== hostPermissionPattern(url)) {
+      await removeHostPermission(previous);
+    }
     input.value = url;
     if (await granted) {
       offerGrant(null);
@@ -75,8 +79,7 @@ form.addEventListener('submit', (event) => {
 grant.addEventListener('click', () => {
   const url = grantUrl;
   if (!url) return;
-  const granted = requestAccess(url);
-  void granted.then((ok) => {
+  void requestHostPermission(url).then((ok) => {
     if (ok) {
       offerGrant(null);
       setStatus('Access granted.', 'ok');
@@ -89,7 +92,7 @@ grant.addEventListener('click', () => {
 async function init(): Promise<void> {
   const stored = await portainerUrl.getValue();
   if (!stored) return;
-  input.value = stored;
+  if (!input.value) input.value = stored;
   if (!(await hasHostPermission(stored))) offerGrant(stored);
 }
 
