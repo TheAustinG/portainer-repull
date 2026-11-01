@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Repull for Portainer</title>
+  </head>
+  <body>
+    <main class="page">
+      <form id="settings" novalidate>
+        <label for="portainer-url">Portainer address</label>
+        <input
+          id="portainer-url"
+          name="portainerUrl"
+          type="url"
+          placeholder="https://portainer.example.com:9443"
+          autocomplete="url"
+          spellcheck="false"
+          aria-describedby="portainer-url-help"
+        />
+        <p id="portainer-url-help" class="help">
+          Firefox will ask to let this add-on reach that host. Access covers every port on the host.
+        </p>
+        <div class="actions">
+          <button id="save" class="btn btn-primary" type="submit">Save</button>
+          <button id="grant" class="btn" type="button" hidden>Grant access</button>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
